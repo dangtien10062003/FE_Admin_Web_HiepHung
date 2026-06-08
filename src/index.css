@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  font-family: "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   color: #122033;
   background: #f7fbff;
   font-synthesis: none;
@@ -21,12 +21,6 @@ body {
     linear-gradient(rgba(14, 116, 144, 0.035) 1px, transparent 1px),
     #f7fbff;
   background-size: 24px 24px;
-}
-
-h1,
-h2,
-h3 {
-  font-family: Georgia, "Times New Roman", serif;
 }
 
 button,
@@ -57,13 +51,13 @@ textarea {
 }
 
 .label {
-  @apply mb-2 block text-sm font-semibold text-stone-700;
+  @apply mb-2 block text-sm font-semibold text-slate-700;
 }
 
 .card {
   @apply rounded-md border border-sky-100 bg-white shadow-sm transition duration-300;
   animation: section-rise 0.55s ease both;
-  box-shadow: 0 4px 0 rgba(14, 116, 144, 0.06);
+  box-shadow: 0 18px 44px rgba(14, 116, 144, 0.08);
 }
 
 @keyframes section-rise {
