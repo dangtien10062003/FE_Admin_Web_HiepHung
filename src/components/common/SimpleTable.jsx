@@ -1,7 +1,7 @@
 function SimpleTable({ columns, rows, emptyText = 'Chưa có dữ liệu' }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[760px] text-left text-sm">
+      <table className="w-full min-w-[1040px] text-left text-sm">
         <thead className="bg-slate-900 text-white">
           <tr>
             {columns.map((column) => (

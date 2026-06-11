@@ -11,7 +11,7 @@ export const statusLabels = {
 }
 
 export const defaultStore = {
-  brandName: 'Giặt Sấy Hiệp Hưng',
+  brandName: 'Giặt Sấy Hiệp',
   address: '14/75 Nguyễn Quang Diêu, Tân Quý, Tân Phú, Tp HCM',
   hotline: '0900 000 000',
   zaloUrl: 'https://zalo.me/0900000000',
