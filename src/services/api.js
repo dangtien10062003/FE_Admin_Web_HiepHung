@@ -20,7 +20,14 @@ export const api = {
   getPrices: () => request('/prices'),
   getStoreSettings: () => request('/store-settings'),
   createBooking: (payload) => request('/bookings', { method: 'POST', body: JSON.stringify(payload) }),
-  adminBookings: (status = '') => request(`/admin/bookings${status ? `?status=${status}` : ''}`),
+  adminBookings: (params = {}) => {
+    const query = new URLSearchParams()
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') query.set(key, value)
+    })
+    const queryText = query.toString()
+    return request(`/admin/bookings${queryText ? `?${queryText}` : ''}`)
+  },
   adminBooking: (id) => request(`/admin/bookings/${id}`),
   updateBookingStatus: (id, status) => request(`/admin/bookings/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
   adminServices: () => request('/admin/services'),

@@ -25,6 +25,15 @@ const fallbackBookings = [
   { id: 2, customerName: 'Đơn chăn ga', phone: '0911111111', address: 'Trong bán kính 3km', serviceName: 'Giặt chăn ga gối nệm', pickupTime: new Date(Date.now() + 86400000).toISOString(), status: 'Confirmed' },
 ]
 
+const defaultBookingPage = {
+  total: 0,
+  page: 1,
+  pageSize: 10,
+  totalPages: 1,
+}
+
+const defaultBookingQuery = {}
+
 const fallbackServices = [
   { id: 1, name: 'Giặt sấy theo kg', description: 'Phân loại màu, giặt sạch và sấy thơm.', isActive: true },
   { id: 2, name: 'Giặt hấp / giặt khô', description: 'Xử lý vest, áo khoác và đồ cần giữ form.', isActive: true },
@@ -37,8 +46,9 @@ const fallbackPrices = [
   { id: 3, name: 'Giặt chăn ga', priceText: '40.000đ - 80.000đ/bộ', note: 'Tùy kích thước' },
 ]
 
-export function useAdminData(status = '') {
+export function useAdminData(status = '', bookingQuery = defaultBookingQuery) {
   const [bookings, setBookings] = useState([])
+  const [bookingPage, setBookingPage] = useState(defaultBookingPage)
   const [services, setServices] = useState([])
   const [prices, setPrices] = useState([])
   const [store, setStore] = useState(defaultStore)
@@ -51,18 +61,21 @@ export function useAdminData(status = '') {
     setError('')
     try {
       const [bookingData, serviceData, priceData, storeData] = await Promise.all([
-        api.adminBookings(status),
+        api.adminBookings({ ...bookingQuery, status }),
         api.adminServices(),
         api.adminPrices(),
         api.getStoreSettings(),
       ])
-      setBookings(bookingData || [])
+      const bookingItems = Array.isArray(bookingData) ? bookingData : bookingData?.items
+      setBookings(bookingItems || [])
+      setBookingPage(Array.isArray(bookingData) ? { ...defaultBookingPage, total: bookingData.length } : { ...defaultBookingPage, ...bookingData })
       setServices(serviceData || [])
       setPrices(priceData || [])
       setStore({ ...defaultStore, ...storeData })
       setOfflineMode(false)
     } catch (err) {
       setBookings(fallbackBookings)
+      setBookingPage({ ...defaultBookingPage, total: fallbackBookings.length })
       setServices(fallbackServices)
       setPrices(fallbackPrices)
       setStore(defaultStore)
@@ -71,7 +84,7 @@ export function useAdminData(status = '') {
     } finally {
       setLoading(false)
     }
-  }, [status])
+  }, [status, bookingQuery])
 
   useEffect(() => {
     loadAdmin()
@@ -79,6 +92,7 @@ export function useAdminData(status = '') {
 
   return {
     bookings,
+    bookingPage,
     services,
     prices,
     store,

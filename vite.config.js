@@ -5,5 +5,9 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   base: '/FE_Admin_Web_HiepHung/',
+  server: {
+    port: 5174,
+    strictPort: true,
+  },
   plugins: [react(), tailwindcss()],
 })

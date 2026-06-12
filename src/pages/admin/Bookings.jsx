@@ -30,45 +30,37 @@ function getGoogleMapLink(row) {
   return ''
 }
 
+function formatDateTime(value) {
+  return value ? new Date(value).toLocaleString('vi-VN') : ''
+}
+
 function BookingsPage() {
   const [status, setStatus] = useState('')
-  const [filters, setFilters] = useState({ search: '', service: '', pickupDate: '' })
-  const { bookings, loading, error, loadAdmin } = useAdminData(status)
+  const [filters, setFilters] = useState({ search: '', service: '', pickupDate: '', orderDateMode: '', orderDateValue: '' })
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 10 })
+  const bookingQuery = useMemo(() => ({ ...filters, page: pagination.page, pageSize: pagination.pageSize }), [filters, pagination])
+  const { bookings, bookingPage, services, loading, error, loadAdmin } = useAdminData(status, bookingQuery)
   const toast = useToast()
 
   const serviceOptions = useMemo(() => {
-    const names = bookings.map((row) => row.serviceName || row.service?.name).filter(Boolean)
+    const names = services.map((row) => row.name).filter(Boolean)
     return Array.from(new Set(names)).sort((a, b) => a.localeCompare(b, 'vi'))
-  }, [bookings])
+  }, [services])
 
-  const filteredBookings = useMemo(() => {
-    const searchText = filters.search.trim().toLowerCase()
+  function setFilter(key, value) {
+    setFilters((current) => ({ ...current, [key]: value }))
+    setPagination((current) => ({ ...current, page: 1 }))
+  }
 
-    return bookings.filter((row) => {
-      const serviceName = row.serviceName || row.service?.name || ''
-      const mapLink = getGoogleMapLink(row)
-      const pickupDate = row.pickupTime ? new Date(row.pickupTime).toISOString().slice(0, 10) : ''
-      const haystack = [
-        row.customerName,
-        row.phone,
-        row.address,
-        row.addressNote,
-        row.note,
-        serviceName,
-        mapLink,
-      ].filter(Boolean).join(' ').toLowerCase()
-
-      return (
-        (!searchText || haystack.includes(searchText)) &&
-        (!filters.service || serviceName === filters.service) &&
-        (!filters.pickupDate || pickupDate === filters.pickupDate)
-      )
-    })
-  }, [bookings, filters])
+  function setStatusFilter(value) {
+    setStatus(value)
+    setPagination((current) => ({ ...current, page: 1 }))
+  }
 
   function resetFilters() {
     setStatus('')
-    setFilters({ search: '', service: '', pickupDate: '' })
+    setFilters({ search: '', service: '', pickupDate: '', orderDateMode: '', orderDateValue: '' })
+    setPagination({ page: 1, pageSize: 10 })
   }
 
   async function update(id, nextStatus) {
@@ -94,7 +86,8 @@ function BookingsPage() {
     },
     { key: 'phone', label: 'Liên hệ' },
     { key: 'serviceName', label: 'Dịch vụ', render: (row) => row.serviceName || row.service?.name },
-    { key: 'pickupTime', label: 'Giờ hẹn', render: (row) => (row.pickupTime ? new Date(row.pickupTime).toLocaleString('vi-VN') : '') },
+    { key: 'createdAt', label: 'Ngày đặt', render: (row) => formatDateTime(row.createdAt) },
+    { key: 'pickupTime', label: 'Ngày giao', render: (row) => formatDateTime(row.pickupTime) },
     {
       key: 'googleMap',
       label: 'Google Maps',
@@ -126,7 +119,7 @@ function BookingsPage() {
   return (
     <>
       <PageHeader title="Đơn đặt lịch" description="Theo dõi và cập nhật trạng thái xử lý đơn của khách.">
-        <select className="field h-11 w-56" value={status} onChange={(event) => setStatus(event.target.value)}>
+        <select className="field h-11 w-56" value={status} onChange={(event) => setStatusFilter(event.target.value)}>
           <option value="">Tất cả trạng thái</option>
           {Object.entries(statusLabels).map(([key, label]) => (
             <option key={key} value={key}>{label}</option>
@@ -136,19 +129,19 @@ function BookingsPage() {
 
       <div className="space-y-4 p-6">
         <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <div className="grid gap-3 lg:grid-cols-[1.35fr_1fr_0.85fr_auto]">
+          <div className="grid gap-3 lg:grid-cols-[1.25fr_0.9fr_0.75fr_0.75fr_0.85fr_auto]">
             <label className="block">
               <span className="label">Tìm kiếm</span>
               <input
                 className="field h-11"
                 value={filters.search}
-                onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
+                onChange={(event) => setFilter('search', event.target.value)}
                 placeholder="Tên khách, SĐT, địa chỉ, link map..."
               />
             </label>
             <label className="block">
               <span className="label">Dịch vụ</span>
-              <select className="field h-11" value={filters.service} onChange={(event) => setFilters((current) => ({ ...current, service: event.target.value }))}>
+              <select className="field h-11" value={filters.service} onChange={(event) => setFilter('service', event.target.value)}>
                 <option value="">Tất cả dịch vụ</option>
                 {serviceOptions.map((service) => (
                   <option key={service} value={service}>{service}</option>
@@ -156,12 +149,38 @@ function BookingsPage() {
               </select>
             </label>
             <label className="block">
-              <span className="label">Ngày hẹn</span>
+              <span className="label">Ngày giao</span>
               <input
                 className="field h-11"
                 type="date"
                 value={filters.pickupDate}
-                onChange={(event) => setFilters((current) => ({ ...current, pickupDate: event.target.value }))}
+                onChange={(event) => setFilter('pickupDate', event.target.value)}
+              />
+            </label>
+            <label className="block">
+              <span className="label">Lọc ngày đặt</span>
+              <select
+                className="field h-11"
+                value={filters.orderDateMode}
+                onChange={(event) => {
+                  setFilters((current) => ({ ...current, orderDateMode: event.target.value, orderDateValue: '' }))
+                  setPagination((current) => ({ ...current, page: 1 }))
+                }}
+              >
+                <option value="">Tất cả</option>
+                <option value="day">Theo ngày</option>
+                <option value="week">Theo tuần</option>
+                <option value="month">Theo tháng</option>
+              </select>
+            </label>
+            <label className="block">
+              <span className="label">Giá trị lọc</span>
+              <input
+                className="field h-11 disabled:bg-gray-100"
+                type={filters.orderDateMode === 'week' ? 'week' : filters.orderDateMode === 'month' ? 'month' : 'date'}
+                value={filters.orderDateValue}
+                disabled={!filters.orderDateMode}
+                onChange={(event) => setFilter('orderDateValue', event.target.value)}
               />
             </label>
             <div className="flex items-end">
@@ -171,14 +190,50 @@ function BookingsPage() {
             </div>
           </div>
           <p className="mt-3 text-sm text-gray-500">
-            Đang hiển thị <strong className="text-gray-900">{filteredBookings.length}</strong> / {bookings.length} đơn.
+            Đang hiển thị <strong className="text-gray-900">{bookings.length}</strong> / {bookingPage.total} đơn.
           </p>
         </section>
 
         {loading && <p className="rounded-md bg-blue-50 px-3 py-2 text-sm text-blue-700">Đang tải danh sách đơn...</p>}
         {error && <p className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700">{error}</p>}
         <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-          <SimpleTable columns={columns} rows={filteredBookings} emptyText="Không có đơn phù hợp bộ lọc" />
+          <SimpleTable columns={columns} rows={bookings} emptyText="Không có đơn phù hợp bộ lọc" />
+        </section>
+        <section className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+            Hiển thị
+            <select
+              className="field h-10 w-24"
+              value={pagination.pageSize}
+              onChange={(event) => setPagination({ page: 1, pageSize: Number(event.target.value) })}
+            >
+              {[10, 20, 30].map((size) => (
+                <option key={size} value={size}>{size}</option>
+              ))}
+            </select>
+            đơn/trang
+          </label>
+          <div className="flex items-center gap-2">
+            <button
+              className="btn-secondary h-10 px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
+              type="button"
+              disabled={bookingPage.page <= 1}
+              onClick={() => setPagination((current) => ({ ...current, page: Math.max(1, current.page - 1) }))}
+            >
+              Trước
+            </button>
+            <span className="min-w-28 text-center text-sm font-semibold text-gray-700">
+              Trang {bookingPage.page} / {bookingPage.totalPages}
+            </span>
+            <button
+              className="btn-secondary h-10 px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
+              type="button"
+              disabled={bookingPage.page >= bookingPage.totalPages}
+              onClick={() => setPagination((current) => ({ ...current, page: current.page + 1 }))}
+            >
+              Sau
+            </button>
+          </div>
         </section>
       </div>
     </>
