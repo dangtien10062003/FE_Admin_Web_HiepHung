@@ -22,7 +22,7 @@ function Header({ onMenuClick }) {
           <Menu size={22} />
         </button>
         <div className="hidden sm:block">
-          <p className="text-sm font-semibold text-gray-900">Quản trị Giặt Sấy Hiệp Hưng</p>
+          <p className="text-sm font-semibold text-gray-900">Quản trị Giặt Sấy Hiệp</p>
           <p className="text-xs text-gray-500">Theo dõi vận hành, dịch vụ, bảng giá và thông tin cửa hàng</p>
         </div>
         <div className="flex items-center gap-3">

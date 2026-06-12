@@ -9,7 +9,7 @@ function SideBar() {
         <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-white shadow-md">
           <Waves size={22} />
         </div>
-        <h2 className="text-center text-base font-semibold tracking-wide">Hiệp Hưng</h2>
+        <h2 className="text-center text-base font-semibold tracking-wide">Hiệp</h2>
         <p className="mt-1 text-center text-xs text-slate-600">Laundry Admin</p>
       </div>
 

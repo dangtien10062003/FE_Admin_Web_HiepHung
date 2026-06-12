@@ -1,6 +1,11 @@
-function StatCard({ label, value, hint, icon: Icon }) {
+import { Link } from 'react-router-dom'
+
+function StatCard({ label, value, hint, icon: Icon, to }) {
+  const Component = to ? Link : 'div'
+  const linkProps = to ? { to } : {}
+
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+    <Component {...linkProps} className="group block rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-gray-500">{label}</p>
@@ -8,12 +13,12 @@ function StatCard({ label, value, hint, icon: Icon }) {
           {hint && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
         </div>
         {Icon && (
-          <div className="rounded-lg bg-blue-50 p-2 text-blue-700">
+          <div className="rounded-lg bg-blue-50 p-2 text-blue-700 transition group-hover:bg-blue-600 group-hover:text-white">
             <Icon size={20} />
           </div>
         )}
       </div>
-    </div>
+    </Component>
   )
 }
 
